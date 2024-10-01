@@ -1,0 +1,109 @@
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (Mono auto generated)
+mono_crash.*
+
+# Auto-generated files
+*.designer.cs
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Ll]astBuildState/
+
+# Build artifacts
+*.dll
+*.exe
+*.app
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+*.msi
+*.vspx
+*.vspscc
+*.cache
+*.ilk
+*.log
+*.obj
+*.pdb
+*.pgc
+*.pgd
+*.pgopts
+*.rsp
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.csproj.user
+.vscode/
+
+# Visual Studio Code directories
+.vscode/
+
+# Rider files
+.idea/
+.idea_modules/
+
+# Visual Studio directories
+.vs/
+
+# npm packages
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Temporary files
+*.tmp
+*.temp
+*.tmp[0-9]*
+
+# Backup files
+*.bak
+*.old
+*.orig
+*.save
+
+# JetBrains Rider directories
+.idea/
+
+# JetBrains Rider out directory
+/out/
+
+# Visual Studio 2022 specific folders
+.vs2022/
+
+# Don't ignore database migrations or EF Core scaffolding scripts
+!**/Migrations/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
