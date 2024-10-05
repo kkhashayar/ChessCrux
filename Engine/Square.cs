@@ -1,20 +1,19 @@
-﻿namespace Engine;
+﻿using static Engine.PieceDefinitions;
 
+namespace Engine;
 public struct Square
 {
     public Piece Piece { get; set; }
 
+    // Default constructor, initializing to an empty square
     public Square()
     {
-        Piece = new Piece();
+        Piece = new Piece(ChessPieceType.None, ChessPieceColor.None);
     }
 
-    // Copy contructor
+    // Copy constructor
     public Square(Piece piece)
     {
-        Piece = piece != null
-            ? new Piece(piece.PieceType, piece.PieceColor) { Moved = piece.Moved }
-            : new Piece();  
+        Piece = new Piece(piece.PieceType, piece.PieceColor) { Moved = piece.Moved };
     }
-
 }

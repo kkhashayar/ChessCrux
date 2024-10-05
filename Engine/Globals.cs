@@ -8,6 +8,24 @@ public sealed class Globals
     public ChessPieceColor Turn { get; set; }
     public int EnPassantSquare { get; set; } = -1;
 
+    // Castling Rights 
+    public bool WhiteKingSideCastling { get; set; } = false;
+    public bool WhiteQueenSideCastling { get; set; } = false;
+    public bool BlackKingSideCastling { get; set; } = false;
+    public bool BlackQueenSideCastling { get; set; } = false;
+
+
+    // Castling conditions 
+    public bool HasWhiteKingMoved { get; set; } = false;
+    public bool HasWhiteRookKingsideMoved { get; set; } = false;
+    public bool HasWhiteRookQueenSideMoved { get; set; } = false;
+
+    public bool HasBlackKingMoved { get; set; } = false;
+    public bool HasBlackRookKingsideMoved { get; set; } = false;
+    public bool HasBlackRookQueenSideMoved { get; set; } = false;
+
+
+
     // Default constructor
     public Globals()
     {
@@ -15,17 +33,75 @@ public sealed class Globals
         for (int i = 0; i < 64; i++)
             Squares[i] = new Square();
 
-        Turn = ChessPieceColor.White;
+        Turn = ChessPieceColor.None;
     }
 
     public void InitializeBoard(string fen = "")
     {
-        LoadPositionFromFEN(string.IsNullOrEmpty(fen) ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" : fen);
+        if (string.IsNullOrEmpty(fen))
+        {
+            LoadPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        }
+        else
+        {
+            LoadPositionFromFEN(fen);
+        }
+    }
+
+
+    public bool CanCastleKingSide(ChessPieceColor color)
+    {
+        int kingIndex = (color == ChessPieceColor.White) ? 60 : 4;
+        int rookIndex = (color == ChessPieceColor.White) ? 63 : 7;
+
+        // Check if rook or king has moved using correct flags
+        if (color == ChessPieceColor.White && (HasWhiteKingMoved || HasWhiteRookKingsideMoved))
+            return false;
+        if (color == ChessPieceColor.Black && (HasBlackKingMoved || HasBlackRookKingsideMoved))
+            return false;
+
+        // Check if squares between king and rook are empty (f1 and g1 for White)
+        for (int i = kingIndex + 1; i < rookIndex; i++)
+        {
+            if (Squares[i].Piece.PieceType != ChessPieceType.None)
+                return false;
+        }
+
+        // Check if king or squares it moves through are under attack (skip for now)
+        // Implement this check later
+
+        // Initial conditions for king-side castling are met
+        return true;
+    }
+
+    public bool CanCastleQueenSide(ChessPieceColor color)
+    {
+        int kingIndex = (color == ChessPieceColor.White) ? 60 : 4;
+        int rookIndex = (color == ChessPieceColor.White) ? 56 : 0;
+
+        // Check if the King or Queen-side Rook has moved using separate flags
+        if (color == ChessPieceColor.White && (HasWhiteKingMoved || HasWhiteRookQueenSideMoved))
+            return false;
+        if (color == ChessPieceColor.Black && (HasBlackKingMoved || HasBlackRookQueenSideMoved))
+            return false;
+
+        // Check if squares between king and rook are empty (b1, c1, and d1 for White)
+        for (int i = rookIndex + 1; i < kingIndex; i++)
+        {
+            if (Squares[i].Piece.PieceType != ChessPieceType.None)
+                return false;
+        }
+
+        // Check if king or squares it moves through are under attack (skip for now)
+        // Implement this check later
+
+        // Initial conditions for queen-side castling are met
+        return true;
     }
 
     public void MovePiece(int fromIndex, int toIndex)
     {
-        if (!IsValidIndex(fromIndex) || !IsValidIndex(toIndex))
+        if (!Helpers.IsValidIndex(fromIndex) || !Helpers.IsValidIndex(toIndex))
         {
             Console.WriteLine("Invalid board coordinates.");
             return;
@@ -36,6 +112,31 @@ public sealed class Globals
         {
             Console.WriteLine("Square is empty!");
             return;
+        }
+
+        // Check for castling moves
+        if (movingPiece.PieceType == ChessPieceType.King)
+        {
+            // King-Side Castling
+            if ((fromIndex == 60 || fromIndex == 4) && toIndex == fromIndex + 2)
+            {
+                if (CanCastleKingSide(movingPiece.PieceColor))
+                {
+                    ExecuteCastling(movingPiece.PieceColor, true);
+                    // Console.WriteLine($"Castling King-Side completed. Next move: {Turn}");
+                    goto FlipTurn;  // Jump to turn flip
+                }
+            }
+            // Queen-Side Castling
+            if ((fromIndex == 60 || fromIndex == 4) && toIndex == fromIndex - 2)
+            {
+                if (CanCastleQueenSide(movingPiece.PieceColor))
+                {
+                    ExecuteCastling(movingPiece.PieceColor, false);
+                    // Console.WriteLine($"Castling Queen-Side completed. Next move: {Turn}");
+                    goto FlipTurn;  // Jump to turn flip
+                }
+            }
         }
 
         if (IsLegalMove(fromIndex, toIndex))
@@ -50,16 +151,42 @@ public sealed class Globals
 
             // Handle En Passant
             UpdateEnPassant(movingPiece, fromIndex, toIndex);
-
-            // Switch the turn
-            Turn = Turn == ChessPieceColor.White ? ChessPieceColor.Black : ChessPieceColor.White;
-            Console.WriteLine($"Turn switched. Next move: {Turn}");
         }
         else
         {
-            Console.WriteLine("Illegal move");
+            // Console.WriteLine("Illegal move");
+            return;  // Exit without flipping the turn if illegal
         }
+
+    FlipTurn:
+        // Switch the turn once before the method exits
+        Turn = (ChessPieceColor)((int)Turn ^ 1);
+        // Console.WriteLine($"Turn switched. Next move: {Turn}");
     }
+
+
+
+    public void ExecuteCastling(ChessPieceColor color, bool isKingSide)
+    {
+        // Determine starting positions based on color
+        int kingStart = (color == ChessPieceColor.White) ? 60 : 4;
+        int rookStart = isKingSide ? ((color == ChessPieceColor.White) ? 63 : 7) : ((color == ChessPieceColor.White) ? 56 : 0);
+
+        // Determine the destination squares for King and Rook based on side
+        int kingEnd = kingStart + (isKingSide ? 2 : -2);
+        int rookEnd = kingEnd + (isKingSide ? -1 : 1);
+
+        // Move the King
+        Squares[kingEnd] = new Square(Squares[kingStart].Piece);
+        Squares[kingStart] = new Square();
+
+        // Move the Rook
+        Squares[rookEnd] = new Square(Squares[rookStart].Piece);
+        Squares[rookStart] = new Square();
+
+        Console.WriteLine($"Castling {(color == ChessPieceColor.White ? "White" : "Black")} {(isKingSide ? "King" : "Queen")} side completed.");
+    }
+
 
     private void HandlePawnPromotion(int toIndex)
     {
@@ -85,7 +212,7 @@ public sealed class Globals
     public bool IsLegalMove(int fromIndex, int toIndex)
     {
         Piece piece = Squares[fromIndex].Piece;
-        Console.WriteLine($"Checking move from {fromIndex} to {toIndex} for {piece.PieceColor} {piece.PieceType}, Turn: {Turn}");
+        // Console.WriteLine($"Checking move from {fromIndex} to {toIndex} for {piece.PieceColor} {piece.PieceType}, Turn: {Turn}");
         if (piece.PieceType == ChessPieceType.None || piece.PieceColor != Turn)
             return false;
 
@@ -114,8 +241,8 @@ public sealed class Globals
 
         int captureLeft = fromIndex + direction - 1;
         int captureRight = fromIndex + direction + 1;
-        bool validLeft = IsValidIndex(captureLeft) && (fromIndex % 8 > 0);
-        bool validRight = IsValidIndex(captureRight) && (fromIndex % 8 < 7);
+        bool validLeft = Helpers.IsValidIndex(captureLeft) && (fromIndex % 8 > 0);
+        bool validRight = Helpers.IsValidIndex(captureRight) && (fromIndex % 8 < 7);
 
         if ((toIndex == captureLeft && validLeft || toIndex == captureRight && validRight) &&
             Squares[toIndex].Piece.PieceType != ChessPieceType.None &&
@@ -154,7 +281,7 @@ public sealed class Globals
         int rowStep = (toRow == fromRow) ? 0 : (toRow > fromRow ? 1 : -1);
         int colStep = (toCol == fromCol) ? 0 : (toCol > fromCol ? 1 : -1);
 
-        Console.WriteLine($"Rook move - From: ({fromRow}, {fromCol}) To: ({toRow}, {toCol}), Steps: ({rowStep}, {colStep})");
+        // Console.WriteLine($"Rook move - From: ({fromRow}, {fromCol}) To: ({toRow}, {toCol}), Steps: ({rowStep}, {colStep})");
 
         // Traverse the path, but stop before reaching the destination square
         int currentRow = fromRow + rowStep;
@@ -163,12 +290,12 @@ public sealed class Globals
         while (currentRow != toRow || currentCol != toCol)
         {
             int index = currentRow * 8 + currentCol;
-            Console.WriteLine($"Checking square at ({currentRow}, {currentCol}) Index: {index}, Piece: {Squares[index].Piece.PieceType}");
+            // Console.WriteLine($"Checking square at ({currentRow}, {currentCol}) Index: {index}, Piece: {Squares[index].Piece.PieceType}");
 
             // Check if any square in between is occupied
             if (Squares[index].Piece.PieceType != ChessPieceType.None)
             {
-                Console.WriteLine("Illegal move: Rook is blocked by another piece.");
+                // Console.WriteLine("Illegal move: Rook is blocked by another piece.");
                 return false;
             }
 
@@ -183,7 +310,7 @@ public sealed class Globals
         // Check if the destination is empty or contains an opponent's piece
         if (destinationPiece.PieceType != ChessPieceType.None && destinationPiece.PieceColor == piece.PieceColor)
         {
-            Console.WriteLine("Illegal move: Rook cannot capture its own piece.");
+            // Console.WriteLine("Illegal move: Rook cannot capture its own piece.");
             return false;
         }
 
@@ -192,7 +319,6 @@ public sealed class Globals
     }
 
 
-    private bool IsValidIndex(int index) => index >= 0 && index < 64;
 
     public void LoadPositionFromFEN(string fen)
     {
@@ -235,22 +361,33 @@ public sealed class Globals
                 };
 
                 Squares[squareIndex] = new Square(new Piece(type, color));
-                Console.WriteLine($"Placed {type} ({color}) at index {squareIndex} ({(char)('a' + squareIndex % 8)}{8 - squareIndex / 8})");
-
-                // Highlight the specific piece at h8 (index 7)
-                if (squareIndex == 7)
-                {
-                    Console.WriteLine($"Specific Debug: Piece at h8 is {type} ({color})");
-                }
                 squareIndex++;
             }
         }
 
         // Set the turn correctly based on FEN
         Turn = (sections[1] == "w") ? ChessPieceColor.White : ChessPieceColor.Black;
-        Console.WriteLine($"Turn set to: {Turn}");
+        //Console.WriteLine($"Turn set to: {Turn}");
+
+        // Reset all castling rights
+        WhiteKingSideCastling = WhiteQueenSideCastling = BlackKingSideCastling = BlackQueenSideCastling = false;
+        string castlingRights = sections[2];
+        if (castlingRights.Contains('K')) WhiteKingSideCastling = true;
+        if (castlingRights.Contains('Q')) WhiteQueenSideCastling = true;
+        if (castlingRights.Contains('k')) BlackKingSideCastling = true;
+        if (castlingRights.Contains('q')) BlackQueenSideCastling = true;
+
+        // En Passant square handling
         EnPassantSquare = -1; // Reset EnPassant square after loading
+        if (sections[3] != "-")
+        {
+            EnPassantSquare = Helpers.SquareNameToIndex(sections[3]);
+            // Console.WriteLine($"En Passant Square set to: {EnPassantSquare}");
+        }
+
+        // Additional handling of half-moves and full-moves can be added here if needed.
     }
+
 
     // Temporary method to display the board
     public void PrintBoard()
@@ -284,6 +421,33 @@ public sealed class Globals
 
         Console.WriteLine();
     }
+
+    public Globals Clone()
+    {
+        var clone = new Globals
+        {
+            Turn = this.Turn,
+            EnPassantSquare = this.EnPassantSquare,
+            WhiteKingSideCastling = this.WhiteKingSideCastling,
+            WhiteQueenSideCastling = this.WhiteQueenSideCastling,
+            BlackKingSideCastling = this.BlackKingSideCastling,
+            BlackQueenSideCastling = this.BlackQueenSideCastling,
+            HasWhiteKingMoved = this.HasWhiteKingMoved,
+            HasWhiteRookKingsideMoved = this.HasWhiteRookKingsideMoved,
+            HasWhiteRookQueenSideMoved = this.HasWhiteRookQueenSideMoved,
+            HasBlackKingMoved = this.HasBlackKingMoved,
+            HasBlackRookKingsideMoved = this.HasBlackRookKingsideMoved,
+            HasBlackRookQueenSideMoved = this.HasBlackRookQueenSideMoved,
+        };
+
+        // Copy the board squares
+        for (int i = 0; i < 64; i++)
+            clone.Squares[i] = new Square(this.Squares[i].Piece);
+
+        return clone;
+    }
+
+
 }
 
 /*           Board layout      

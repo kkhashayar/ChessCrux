@@ -1,15 +1,40 @@
 ﻿using Engine;
+using System.Transactions;
 
 Globals board = new Globals();
 
-board.InitializeBoard("k3r3/8/8/R3p3/4P2r/8/8/K3R3 w - - 0 1");
+string? fen = "8/8/7k/8/7K/8/8/8 w - - 0 1";
+int maxDepth = 1;
 
-bool running = true;
-while (running)
+board.InitializeBoard(fen);
+
+TestPerft(board, maxDepth);
+
+void TestPerft(Globals board, int maxDepth)
 {
-    board.PrintBoard(); // Print board before each move
-    GetUserMove();
+    MoveGeneration moveGen = new MoveGeneration(board);
+    Console.WriteLine($"Testing position: {fen} ");
+    for (int depth = 1; depth <= maxDepth ; depth ++ )
+    {
+        long nodes = moveGen.Perft(depth); 
+        Console.WriteLine($"Perft({depth}): {nodes}");
+    }
 }
+
+
+//bool running = true;
+//bool running = true;
+//while (running)
+//{
+//    board.PrintBoard(); // Print board before each move
+//    GetUserMove();
+
+//    Console.WriteLine("Do you want to continue? (y/n)");
+//    running = Console.ReadLine()?.ToLower() == "y";
+//}
+
+
+
 
 void GetUserMove()
 {
@@ -27,8 +52,8 @@ void GetUserMove()
 
     Console.WriteLine($"Parsed input - Start Square: {startSquare}, End Square: {endSquare}");
 
-    int startIndex = SquareNameToIndex(startSquare);
-    int endIndex = SquareNameToIndex(endSquare);
+    int startIndex = Helpers.SquareNameToIndex(startSquare);
+    int endIndex = Helpers.SquareNameToIndex(endSquare);
 
     Console.WriteLine($"Converted - Start Index: {startIndex}, End Index: {endIndex}");
 
@@ -47,35 +72,6 @@ void GetUserMove()
 
 
 // Helper function to convert square name (e.g., "a2") to board index
-int SquareNameToIndex(string squareName)
-{
-    if (squareName.Length != 2)
-    {
-        Console.WriteLine($"Invalid square name: {squareName}");
-        return -1;
-    }
-
-    char file = squareName[0]; // 'a' to 'h'
-    char rank = squareName[1]; // '1' to '8'
-
-    int fileIndex = file - 'a'; // Convert 'a' to 0, 'b' to 1, ..., 'h' to 7
-    int rankIndex = rank - '1'; // Convert '1' to 0, '2' to 1, ..., '8' to 7
-
-    Console.WriteLine($"Square: {squareName}, File: {fileIndex}, Rank: {rankIndex}");
-
-    if (fileIndex < 0 || fileIndex > 7 || rankIndex < 0 || rankIndex > 7)
-    {
-        Console.WriteLine($"Invalid square input: {squareName}");
-        return -1;
-    }
-
-    // Flip the rank to match the internal board layout
-    int boardIndex = (7 - rankIndex) * 8 + fileIndex;
-    Console.WriteLine($"Mapped Square {squareName} to Index {boardIndex}");
-
-    return boardIndex;
-}
-
 
 
 

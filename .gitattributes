@@ -1,0 +1,11 @@
+# Handle line endings automatically for all text files
+* text=auto
+
+# Force Unix-style line endings
+*.cs eol=lf
+*.sh eol=lf
+*.md eol=lf
+
+# Force Windows-style line endings
+*.bat eol=crlf
+*.cmd eol=crlf

@@ -4,8 +4,10 @@ public class PieceDefinitions
 {
     public enum ChessPieceColor
     {
-        White,
-        Black
+        None = -1,
+        White = 0,
+        Black = 1
+        
     }
 
     public enum ChessPieceType
