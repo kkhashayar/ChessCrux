@@ -12,7 +12,7 @@ TestPerft(board, maxDepth);
 
 void TestPerft(Globals board, int maxDepth)
 {
-    MoveGeneration moveGen = new MoveGeneration(board);
+    MoveGenerator moveGen = new MoveGenerator(board);
     Console.WriteLine($"Testing position: {fen} ");
     for (int depth = 1; depth <= maxDepth ; depth ++ )
     {

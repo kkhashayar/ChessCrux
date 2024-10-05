@@ -1,13 +1,14 @@
-﻿using static Engine.PieceDefinitions;
+﻿using System.Data;
+using static Engine.PieceDefinitions;
 
 namespace Engine
 {
-    public class MoveGeneration
+    public class MoveGenerator
     {
         private Globals globals;
 
         // Constructor
-        public MoveGeneration(Globals globals)
+        public MoveGenerator(Globals globals)
         {
             this.globals = globals;
         }
@@ -30,8 +31,8 @@ namespace Engine
                 Console.WriteLine("No king on the board");
                 return false;
             }
-            // Check for attacks by opponent
-            // ChessPieceColor opponentColor = (ChessPieceColor)((int)color & 1);
+            
+            
 
             var opponentColor = ChessPieceColor.None;
             if(color == ChessPieceColor.White)opponentColor = ChessPieceColor.Black;    
@@ -156,7 +157,7 @@ namespace Engine
                 clonedBoard.MovePiece(fromIndex, toIndex);
 
                 // Create a new MoveGeneration instance to check for king's status
-                MoveGeneration clonedMoveGen = new MoveGeneration(clonedBoard);
+                MoveGenerator clonedMoveGen = new MoveGenerator(clonedBoard);
 
                 // If the move does not leave the king in check, add it to legal moves
                 if (!clonedMoveGen.IsKingInCheck(globals.Turn))
@@ -193,7 +194,7 @@ namespace Engine
                 clonedBoard.MovePiece(fromIndex, toIndex);
 
                 // Recursively call Perft on the cloned board
-                MoveGeneration clonedMoveGen = new MoveGeneration(clonedBoard);
+                MoveGenerator clonedMoveGen = new MoveGenerator(clonedBoard);
                 long childNodes = clonedMoveGen.Perft(depth - 1);
 
                 // Format move like "e2e4"
